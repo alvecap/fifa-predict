@@ -1,0 +1,361 @@
+<html><head><base href="https://websim.creation.engine/fifa-predict-pro/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA PREDICT PRO - Prédictions de Match Améliorées</title>
+<script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script src="https://unpkg.com/framer-motion@4.1.17/dist/framer-motion.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  .pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .score-list {
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .score-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .score-item:last-child {
+    border-bottom: none;
+  }
+  
+  .score-label {
+    flex: 0 0 auto;
+    width: 4rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4b5563;
+  }
+  
+  .score-inputs {
+    display: flex;
+    flex: 1;
+    gap: 0.5rem;
+  }
+  
+  .score-input {
+    flex: 1;
+    max-width: 3rem;
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 640px) {
+    .sm\:max-w-xl {
+      max-width: 90%;
+    }
+    .sm\:p-20 {
+      padding: 1.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+const { motion, AnimatePresence } = window.Motion;
+
+const FifaPredictPro = () => {
+  const [step, setStep] = useState(1);
+  const [odds, setOdds] = useState({ home: '', draw: '', away: '' });
+  const [previousScores, setPreviousScores] = useState(Array(5).fill({ home: '', away: '' }));
+  const [predictions, setPredictions] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleOddsChange = (e) => {
+    setOdds({ ...odds, [e.target.name]: e.target.value });
+  };
+
+  const handlePreviousScoresChange = (index, team, value) => {
+    const newScores = [...previousScores];
+    newScores[index] = { ...newScores[index], [team]: value };
+    setPreviousScores(newScores);
+  };
+
+  const calculatePredictions = () => {
+    setError('');
+    setLoading(true);
+
+    if (!odds.home || !odds.draw || !odds.away) {
+      setError('Veuillez entrer toutes les cotes.');
+      setLoading(false);
+      return;
+    }
+
+    const homeOdds = parseFloat(odds.home);
+    const drawOdds = parseFloat(odds.draw);
+    const awayOdds = parseFloat(odds.away);
+
+    if (homeOdds <= 1 || drawOdds <= 1 || awayOdds <= 1) {
+      setError('Les cotes doivent être supérieures à 1.');
+      setLoading(false);
+      return;
+    }
+
+    const validScores = previousScores.filter(score => score.home !== '' && score.away !== '');
+    if (validScores.length === 0) {
+      setError('Veuillez entrer au moins un score valide.');
+      setLoading(false);
+      return;
+    }
+
+    setTimeout(() => {
+      const totalProb = (1 / homeOdds) + (1 / drawOdds) + (1 / awayOdds);
+      const homeProb = (1 / homeOdds) / totalProb * 100;
+      const drawProb = (1 / drawOdds) / totalProb * 100;
+      const awayProb = (1 / awayOdds) / totalProb * 100;
+
+      const avgHomeScore = validScores.reduce((sum, score) => sum + parseInt(score.home), 0) / validScores.length;
+      const avgAwayScore = validScores.reduce((sum, score) => sum + parseInt(score.away), 0) / validScores.length;
+
+      const predictScore = (avgScore, prob, factor = 1) => {
+        const baseScore = avgScore * (prob / 50) + Math.random() * 0.5;
+        return Math.max(0, Math.round(baseScore * factor * (1 + (Math.random() - 0.5) * 0.2)));
+      };
+
+      let homeScore1, awayScore1, homeScore2, awayScore2;
+      do {
+        homeScore1 = predictScore(avgHomeScore, homeProb);
+        awayScore1 = predictScore(avgAwayScore, awayProb);
+        homeScore2 = predictScore(avgHomeScore, homeProb, 1.1);
+        awayScore2 = predictScore(avgAwayScore, awayProb, 1.1);
+      } while (homeScore1 === homeScore2 && awayScore1 === awayScore2);
+
+      setPredictions({
+        probabilities: {
+          home: homeProb.toFixed(2),
+          draw: drawProb.toFixed(2),
+          away: awayProb.toFixed(2)
+        },
+        scores: {
+          fullTime: [`${homeScore1} - ${awayScore1}`, `${homeScore2} - ${awayScore2}`],
+          halfTime: [
+            `${Math.max(0, Math.floor(homeScore1 / 2))} - ${Math.max(0, Math.floor(awayScore1 / 2))}`,
+            `${Math.max(0, Math.floor(homeScore2 / 2))} - ${Math.max(0, Math.floor(awayScore2 / 2))}`
+          ]
+        }
+      });
+
+      setLoading(false);
+      setStep(3);
+    }, 2000);
+  };
+
+  const resetPrediction = () => {
+    setStep(1);
+    setOdds({ home: '', draw: '', away: '' });
+    setPreviousScores(Array(5).fill({ home: '', away: '' }));
+    setPredictions(null);
+    setError('');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 py-6 flex flex-col justify-center sm:py-12">
+      <div className="relative py-3 sm:max-w-xl sm:mx-auto w-full px-4 sm:px-0">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative px-4 py-8 bg-white shadow-2xl sm:rounded-3xl sm:p-12 border-4 border-indigo-300"
+        >
+          <div className="max-w-md mx-auto">
+            <div className="flex flex-col items-center mb-6">
+              <h1 className="text-3xl font-extrabold text-indigo-600 mb-2">FIFA PREDICT PRO</h1>
+              <div className="w-16 h-1 bg-indigo-500 rounded"></div>
+            </div>
+            <AnimatePresence>
+              {step === 1 && (
+                <motion.div
+                  key="step1"
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <h2 className="text-xl font-bold text-gray-800">Étape 1: Cotes du Match</h2>
+                  {['home', 'draw', 'away'].map((type) => (
+                    <div key={type}>
+                      <label htmlFor={type} className="block text-sm font-medium text-gray-700">
+                        Cote {type === 'home' ? 'Domicile' : type === 'draw' ? 'Match nul' : 'Extérieur'}
+                      </label>
+                      <input
+                        type="number"
+                        id={type}
+                        name={type}
+                        value={odds[type]}
+                        onChange={handleOddsChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Entrez la cote"
+                        step="0.01"
+                        min="1.01"
+                      />
+                    </div>
+                  ))}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStep(2)}
+                    className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Suivant
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <h2 className="text-xl font-bold text-gray-800">Étape 2: Scores Précédents</h2>
+                  <div className="score-list">
+                    {previousScores.map((score, index) => (
+                      <div key={index} className="score-item flex items-center">
+                        <span className="score-label mr-2">Match {index + 1}</span>
+                        <div className="score-inputs flex space-x-2">
+                          <input
+                            type="number"
+                            value={score.home}
+                            onChange={(e) => handlePreviousScoresChange(index, 'home', e.target.value)}
+                            className="score-input mt-1 block border border-gray-300 rounded-md shadow-sm p-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Home"
+                            min="0"
+                          />
+                          <span className="text-gray-500 self-center">-</span>
+                          <input
+                            type="number"
+                            value={score.away}
+                            onChange={(e) => handlePreviousScoresChange(index, 'away', e.target.value)}
+                            className="score-input mt-1 block border border-gray-300 rounded-md shadow-sm p-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Away"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex space-x-4">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setStep(1)}
+                      className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Retour
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={calculatePredictions}
+                      className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Prédire
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 3 && predictions && (
+                <motion.div
+                  key="step3"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-2xl font-bold text-center text-indigo-600">Résultats de la Prédiction</h2>
+                  <div className="grid grid-cols-3 gap-4 text-center bg-gradient-to-r from-blue-100 to-indigo-100 p-6 rounded-lg shadow-md">
+                    {['home', 'draw', 'away'].map((type) => (
+                      <div key={type} className="bg-white p-3 rounded-lg shadow-sm transform hover:scale-105 transition-transform duration-200">
+                        <h3 className="text-sm font-medium text-gray-600 mb-2">
+                          {type === 'home' ? 'Domicile' : type === 'draw' ? 'Match nul' : 'Extérieur'}
+                        </h3>
+                        <p className="text-center font-bold text-xl" style={{color: '#4f46e5'}}>
+                          {predictions.probabilities[type]}%
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {['Mi-temps', 'Temps réglementaire'].map((period, index) => (
+                    <div key={period} className="bg-white p-4 rounded-lg shadow-md transform hover:scale-102 transition-transform duration-200">
+                      <h3 className="text-lg font-semibold text-gray-700 mb-3">{period}</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {predictions.scores[index === 0 ? 'halfTime' : 'fullTime'].map((score, i) => (
+                          <div key={i} className="bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-lg">
+                            <p className="text-center font-bold text-xl">{score}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={resetPrediction}
+                    className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Nouvelle prédiction
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {loading && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white text-gray-800 p-6 rounded-lg shadow-xl">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
+                  <p className="mt-4 text-center">Chargement en cours...</p>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg"
+              >
+                <p className="text-sm text-red-700">{error}</p>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+      <footer className="fixed bottom-0 left-0 right-0 py-2 bg-white text-gray-600 text-center text-xs">
+        <p className="font-bold">AL VE CAPITAL</p>
+        <p>© 2024 Tous droits réservés</p>
+      </footer>
+    </div>
+  );
+};
+
+ReactDOM.render(<FifaPredictPro />, document.getElementById('root'));
+</script>
+</body></html>

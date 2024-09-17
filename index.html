@@ -77,14 +77,14 @@
 
   .app-container {
     width: 100%;
-    max-width: 480px;
+    max-width: 540px;
     margin: 0 auto;
     padding: 1rem;
   }
 
   @media (min-width: 640px) {
     .app-container {
-      max-width: 540px;
+      max-width: 600px;
     }
   }
 
@@ -132,6 +132,21 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: #1f2937;
+  }
+
+  .welcome-message {
+    background-color: #f0f4ff;
+    border-left: 4px solid #4f46e5;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .welcome-message p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #4b5563;
   }
 </style>
 </head>
@@ -250,6 +265,13 @@ const FifaPredictPro = () => {
             <div className="flex flex-col items-center mb-6">
               <h1 className="text-3xl font-extrabold text-indigo-600 mb-2">FIFA PREDICT PRO</h1>
               <div className="w-16 h-1 bg-indigo-500 rounded"></div>
+              <div className="welcome-message mt-4">
+                <p>
+                  Bienvenue sur FIFA PREDICT PRO. Notre application utilise des outils de calcul avancés, 
+                  y compris l'analyse statistique et l'apprentissage automatique, pour fournir des prédictions 
+                  de match précises basées sur les cotes et les scores passés.
+                </p>
+              </div>
             </div>
             <AnimatePresence>
               {step === 1 && (
@@ -314,7 +336,6 @@ const FifaPredictPro = () => {
                             placeholder="Home"
                             min="0"
                           />
-                          <span className="text-gray-500 self-center">-</span>
                           <input
                             type="number"
                             value={score.away}

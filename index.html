@@ -75,6 +75,39 @@
     }
   }
 
+  .app-container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .app-container {
+      max-width: 540px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .app-container {
+      max-width: 720px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-container {
+      max-width: 960px;
+    }
+  }
+
+  .content-wrapper {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    width: 100%;
+  }
+
   .prediction-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -205,13 +238,13 @@ const FifaPredictPro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 sm:max-w-xl mx-auto w-full px-4 sm:px-0">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 py-6 flex flex-col justify-center">
+      <div className="app-container">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative px-4 py-6 sm:py-8 bg-white shadow-2xl sm:rounded-3xl sm:p-12 border-4 border-indigo-300"
+          className="content-wrapper"
         >
           <div className="max-w-md mx-auto">
             <div className="flex flex-col items-center mb-6">

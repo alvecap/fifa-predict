@@ -1,6 +1,6 @@
 <html><head><base href="https://websim.creation.engine/fifa-predict-pro/">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FIFA PREDICT PRO - Prédictions de Match Améliorées</title>
 <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
@@ -23,7 +23,7 @@
     background-color: #f3f4f6;
     border-radius: 0.5rem;
     padding: 1rem;
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
   }
   
@@ -61,11 +61,44 @@
 
   @media (max-width: 640px) {
     .sm\:max-w-xl {
-      max-width: 90%;
+      max-width: 100%;
+      width: 100%;
     }
-    .sm\:p-20 {
-      padding: 1.5rem;
+    .sm\:p-12 {
+      padding: 1rem;
     }
+    .relative.py-3 {
+      padding: 0;
+    }
+    .relative.px-4.py-6 {
+      padding: 1rem;
+    }
+  }
+
+  .prediction-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .prediction-item {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .prediction-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+  }
+
+  .prediction-score {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
   }
 </style>
 </head>
@@ -173,12 +206,12 @@ const FifaPredictPro = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto w-full px-4 sm:px-0">
+      <div className="relative py-3 sm:max-w-xl mx-auto w-full px-4 sm:px-0">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative px-4 py-8 bg-white shadow-2xl sm:rounded-3xl sm:p-12 border-4 border-indigo-300"
+          className="relative px-4 py-6 sm:py-8 bg-white shadow-2xl sm:rounded-3xl sm:p-12 border-4 border-indigo-300"
         >
           <div className="max-w-md mx-auto">
             <div className="flex flex-col items-center mb-6">
@@ -303,18 +336,20 @@ const FifaPredictPro = () => {
                       </div>
                     ))}
                   </div>
-                  {['Mi-temps', 'Temps réglementaire'].map((period, index) => (
-                    <div key={period} className="bg-white p-4 rounded-lg shadow-md transform hover:scale-102 transition-transform duration-200">
-                      <h3 className="text-lg font-semibold text-gray-700 mb-3">{period}</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        {predictions.scores[index === 0 ? 'halfTime' : 'fullTime'].map((score, i) => (
-                          <div key={i} className="bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-lg">
-                            <p className="text-center font-bold text-xl">{score}</p>
-                          </div>
-                        ))}
+                  <div className="prediction-container">
+                    {['Mi-temps', 'Temps réglementaire'].map((period, index) => (
+                      <div key={period} className="prediction-item">
+                        <h3 className="prediction-title">{period}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {predictions.scores[index === 0 ? 'halfTime' : 'fullTime'].map((score, i) => (
+                            <div key={i} className="bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-lg">
+                              <p className="prediction-score">{score}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -348,7 +383,7 @@ const FifaPredictPro = () => {
           </div>
         </motion.div>
       </div>
-      <footer className="fixed bottom-0 left-0 right-0 py-2 bg-white text-gray-600 text-center text-xs">
+      <footer className="mt-8 py-2 bg-white text-gray-600 text-center text-xs w-full">
         <p className="font-bold">AL VE CAPITAL</p>
         <p>© 2024 Tous droits réservés</p>
       </footer>

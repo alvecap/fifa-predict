@@ -73,6 +73,9 @@
     .relative.px-4.py-6 {
       padding: 1rem;
     }
+    .probability-container {
+      grid-template-columns: 1fr;
+    }
   }
 
   html, body, #root {
@@ -85,37 +88,41 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    background-image: url('https://websim.creation.engine/fifa-predict-pro/soccer-field-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
   }
 
   .content-wrapper {
     flex: 1;
     overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 800px;
+    margin: 2rem auto;
   }
 
   @media (min-width: 640px) {
-    .app-container {
+    .content-wrapper {
       max-width: 600px;
     }
   }
 
   @media (min-width: 768px) {
-    .app-container {
+    .content-wrapper {
       max-width: 720px;
     }
   }
 
   @media (min-width: 1024px) {
-    .app-container {
-      max-width: 960px;
+    .content-wrapper {
+      max-width: 800px;
     }
-  }
-
-  .content-wrapper {
-    background-color: white;
-    border-radius: 1rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    padding: 1.5rem;
-    width: 100%;
   }
 
   .prediction-container {
@@ -125,10 +132,16 @@
   }
 
   .prediction-item {
-    background-color: #2d3748;
+    background-color: rgba(45, 55, 72, 0.9);
     border-radius: 0.5rem;
     padding: 1rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .prediction-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
   }
 
   .prediction-title {
@@ -145,7 +158,7 @@
   }
 
   .welcome-message {
-    background-color: #f0f4ff;
+    background-color: rgba(240, 244, 255, 0.9);
     border-left: 4px solid #4f46e5;
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -163,17 +176,32 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
-    background-color: #2d3748;
+    background-color: rgba(45, 55, 72, 0.9);
     padding: 1rem;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
+  @media (max-width: 640px) {
+    .probability-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .probability-item {
-    background-color: #4a5568;
+    background-color: rgba(74, 85, 104, 0.9);
     padding: 0.75rem;
     border-radius: 0.5rem;
     text-align: center;
+    transition: transform 0.3s ease;
+  }
+
+  @media (max-width: 640px) {
+    .probability-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
   }
 
   .probability-item h3 {
@@ -185,12 +213,40 @@
   }
 
   footer {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 0.5rem;
     text-align: center;
     font-size: 0.75rem;
     color: #4b5563;
     box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .custom-input {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d1d5db;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .custom-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+
+  .custom-button {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .custom-button:hover {
+    transform: translateY(-2px);
+  }
+
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+  }
+
+  .loading-spinner {
+    border-top-color: #4f46e5;
   }
 </style>
 </head>
@@ -297,7 +353,7 @@ const FifaPredictPro = () => {
   };
 
   return (
-    <div className="app-container bg-gradient-to-br from-blue-100 to-indigo-200">
+    <div className="app-container">
       <div className="content-wrapper">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -311,9 +367,7 @@ const FifaPredictPro = () => {
             {step === 1 && (
               <div className="welcome-message mt-4">
                 <p>
-                  Bienvenue sur FIFA PREDICT PRO. Notre application utilise des outils de calcul avancés, 
-                  y compris l'analyse statistique et l'apprentissage automatique, pour fournir des prédictions 
-                  de match précises basées sur les cotes et les scores passés.
+                  Bienvenue sur FIFA PREDICT PRO. Notre application utilise des outils de calcul avancés pour fournir des prédictions de match fiables basées sur les cotes et les scores passés.
                 </p>
               </div>
             )}
@@ -340,7 +394,7 @@ const FifaPredictPro = () => {
                       name={type}
                       value={odds[type]}
                       onChange={handleOddsChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="custom-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Entrez la cote"
                       step="0.01"
                       min="1.01"
@@ -351,7 +405,7 @@ const FifaPredictPro = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setStep(2)}
-                  className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="custom-button w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   Suivant
                 </motion.button>
@@ -377,7 +431,7 @@ const FifaPredictPro = () => {
                           type="number"
                           value={score.home}
                           onChange={(e) => handlePreviousScoresChange(index, 'home', e.target.value)}
-                          className="score-input mt-1 block border border-gray-300 rounded-md shadow-sm p-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="custom-input score-input mt-1 block border border-gray-300 rounded-md shadow-sm p-1 focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder="Home"
                           min="0"
                         />
@@ -385,7 +439,7 @@ const FifaPredictPro = () => {
                           type="number"
                           value={score.away}
                           onChange={(e) => handlePreviousScoresChange(index, 'away', e.target.value)}
-                          className="score-input mt-1 block border border-gray-300 rounded-md shadow-sm p-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="custom-input score-input mt-1 block border border-gray-300 rounded-md shadow-sm p-1 focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder="Away"
                           min="0"
                         />
@@ -393,12 +447,15 @@ const FifaPredictPro = () => {
                     </div>
                   ))}
                 </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Important : Veuillez saisir les 5 derniers scores avec précision. Ces données sont cruciales pour la fiabilité de nos prédictions.
+                </p>
                 <div className="flex space-x-4">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setStep(1)}
-                    className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="custom-button flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Retour
                   </motion.button>
@@ -406,7 +463,7 @@ const FifaPredictPro = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={calculatePredictions}
-                    className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="custom-button flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Prédire
                   </motion.button>
@@ -453,7 +510,7 @@ const FifaPredictPro = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={resetPrediction}
-                  className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="custom-button w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   Nouvelle prédiction
                 </motion.button>
@@ -462,9 +519,9 @@ const FifaPredictPro = () => {
           </AnimatePresence>
 
           {loading && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 loading-overlay">
               <div className="bg-white text-gray-800 p-6 rounded-lg shadow-xl">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto loading-spinner"></div>
                 <p className="mt-4 text-center">Chargement en cours...</p>
               </div>
             </div>
